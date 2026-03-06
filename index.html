@@ -113,4 +113,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+    <!-- Service worker registration (must be before </body>) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js').catch(console.warn);
+    }
+  </script>
+</body>
+</html>
 </body></html>
