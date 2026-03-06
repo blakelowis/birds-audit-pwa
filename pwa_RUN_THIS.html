@@ -1,0 +1,55 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Launcher — Birds Audit Tools</title>
+<style>body{font:15px/1.4 system-ui;background:#0f1318;color:#e6edf3;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:24px}
+.card{background:#0f1a16;border:1px solid #263442;border-radius:12px;padding:16px;margin:12px 0}
+.ok{color:#10b981}.bad{color:#fca5a5}
+.btn{display:inline-block;margin-top:10px;background:#2563eb;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none}
+code{background:#111827;border:1px solid #263442;border-radius:6px;padding:2px 6px}
+</style>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+</head><body>
+<div class="wrap">
+  <h1>Birds Audit Tools — Launcher</h1>
+  <div id="status" class="card">Initialising…</div>
+  <div class="card"><h2>Manual open (fallback)</h2>
+    <p><a id="lnk" class="btn" href="#">Open Auditor App</a></p>
+    <p>Target: <code id="target"></code></p>
+  </div>
+</div>
+<script>
+(function(){
+  var siteRoot='https://birdsofderby-my.sharepoint.com';
+  var siteRel='/personal/blake_lowis_birdsofderby_co_uk';
+  var toolsRel='/Documents/AuditTools/';
+  var auditor='AuditorApp.html';
+  var targetAbs=siteRoot+siteRel+toolsRel+auditor;
+  document.getElementById('target').textContent=targetAbs;
+  document.getElementById('lnk').href=targetAbs;
+  function setMsg(m,ok){var el=document.getElementById('status');el.innerHTML=m;el.className='card '+(ok?'ok':'bad');}
+  var isFile=location.protocol==='file:';
+  var isViewer=(location.search.indexOf('web=1')>=0);
+  var onRightHost=(location.hostname==='birdsofderby-my.sharepoint.com');
+  if(isFile){setMsg('Detected <code>file://</code>. Redirecting to SharePoint…',false);window.location.replace(targetAbs);return}
+  if(!onRightHost){setMsg('Detected host <code>'+location.hostname+'</code>. Redirecting…',false);window.location.replace(targetAbs);return}
+  if(isViewer){var clean=location.href.replace(/\?web=1.*/, ''); if(clean===location.href) clean=targetAbs; setMsg('Viewer shell detected. Opening raw HTML…',false); window.location.replace(clean); return}
+  setMsg('Checking SharePoint connectivity…',true);
+  fetch(siteRoot+'/_api/contextinfo',{method:'POST',headers:{'Accept':'application/json;odata=nometadata'},credentials:'include'})
+  .then(function(r){if(!r.ok) throw new Error('API '+r.status); return r.json();})
+  .then(function(){setMsg('Connected. Opening Auditor App…',true); window.location.replace(targetAbs)})
+  .catch(function(e){setMsg('Could not reach SharePoint API ('+e.message+'). Click the blue button below.',false)});
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(e){
+      console.warn('SW registration failed', e);
+    });
+  });
+}
+</script>
+</body></html>
